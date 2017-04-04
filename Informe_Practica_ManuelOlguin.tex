@@ -235,10 +235,48 @@ SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular
 \emph{VEhicles In Network Simulation}, \emph{VEINS}, es un framework de fuente abierta para la simulación, tanto en su aspecto de comunicaciones como de transporte, de Sistemas de Transporte Inteligente.
 
 
-\subsection{Situación Previa}
+\subsection{Situación Previa}\label{section:situacion_previa}
 
 \newpage
 \section{Trabajo Realizado}
+
+El trabajo realizado tenía como fin último la elaboración de un prototipo de un sistema de alerta temprana para ciclistas en un ITS. El fin de este sistema era el de predecir, mediante un modelo de probabilidades bayesianas descrito por Liebner \textit{et al.} en \cite{prediction-paper}, la probabilidad de un giro sorpresivo de un vehículo en un cruce, y notificar esto a ciclistas cercanos a dicho cruce (se asumieron ciclistas y vehículos en el contexto de un ITS, dotados de capacidades de comunicación inalámbrica).
+
+Este trabajo se dividió entonces en dos partes:
+
+\begin{enumerate}
+  \item Estudio y comprensión del software especializado OMNeT++, SUMO y VEINS, y la posterior elaboración de un prototipo simple para ilustrar la factibilidad del proyecto.
+  \item Implementación del sistema, utilizando como base el prototipo anterior y utilizando registros de tráfico real.
+\end{enumerate}
+
+Cabe destacar que las labores del practicante abarcaron la implementación del modelo vehicular y la integración del modelo predictivo a este. El estudio y la implementación del modelo descrito en \cite{prediction-paper} quedó a cargo de Sebastián Piña M., alumno del DIE y compañero de equipo del practicante.
+
+\subsection{Estudio del software y elaboración de un prototipo inicial simple}
+
+El primer mes de la práctica se enfocó totalmente en el estudio del software especializado, enfocado principalmente en VEINS y la elaboración de modelos de sistemas de transporte inteligentes utilizando el framework. Esto además significó el aprendizaje de C++ por parte del practicante. Con el fin de realizar un aprendizaje didáctico y aplicado, se implementó además un prototipo simple de un cruce vehicular con carriles para ciclistas.
+
+\subsubsection{Prototipo inicial}
+
+El prototipo inicial se construyó en base al trabajo previamente realizado por Javiera Born (descrito en la sección \ref{section:situacion_previa}). Este consistió en una simulación muy simple, compuesta por un vehículo motorizado y una bicicleta, los cuales interactúan en un cruce. A continuación se detalla la elaboración de este prototipo, y los resultados obtenidos para la siguiente etapa del trabajo de práctica.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{prototipo_inicial.png}
+  \caption{Prototipo inicial en ejecución}
+  \label{fig:sumo_prototype}
+\end{figure}
+
+\subsubsection{Parámetros físicos de la simulación}
+
+El aspecto de transporte de la simulación no presenta grandes cambios respecto a lo desarrollado anteriormente por J. Born -- se reutilzó el cruce vehicular simple compuesto por una vía de tres pistas y otra de dos, ambas con ciclovías a los costados. Se modificaron los flujos vehiculares para que consistieran únicamente en un automóvil y una bicicleta, y para sincronizar su llegada al cruce y poder simular la detención de la bici en reacción a un mensaje de viraje emitido por el automóvil (detalles de la implementación de esto en la sección \ref{section:prot_communication}).
+
+\subsubsection{Simulación de comunicación inalámbrica y lógica?}\label{section:prot_communication}
+
+La lógica de la simulación se implementó en un módulo de OMNeT++ llamado \emph{BikeManeuver}. En este módulo se implementó el comportamiento de ambos vehículos (automóvil y bicicleta), diferenciando su comportamiento durante la ejecución mediante un \emph{flag} seteado al inicio de la simulación.
+
+El comportamiento de ambos es muy simple, pero sirve para ilustrar y entender el comportamiento de VEINS.
+
+
 
 \newpage
 \section{Conclusiones}
@@ -251,7 +289,7 @@ SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular
     \bibitem{DIE} \emph{Departamento de Ingeniería Eléctrica} - \url{http://die.cl/}
 
     \bibitem{eudirective}
-  		\hbadness=10000 Directive 2010/40/EU of the European Parliament and of the Council
+  		\hbadness=1000 Directive 2010/40/EU of the European Parliament and of the Council
   		\textit{on the framework for the deployment of Intelligent Transport Systems in the field of road transport and for interfaces with other modes of transport},
   		2010 O.J. L 207/1
 
@@ -279,14 +317,20 @@ SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular
   		\\doi: 10.1109/VETECS.2008.458
 
     \bibitem{omnet}
-  		\hbadness=10000 OMNeT++ Discrete Event Simulator.
+  		\hbadness=1000 OMNeT++ Discrete Event Simulator.
   		\textit{An extensible, modular, component-based C++ simulation library and framework, primarily for building network simulators}.
   		\\\url{https://OMNeTpp.org/} (\textit{04/2017})
 
     \bibitem{sumo}
-  		\hbadness=10000 SUMO – Simulation of Urban MObility.
+  		\hbadness=1000 SUMO – Simulation of Urban MObility.
   		\textit{A free and open traffic simulation suite which is available since 2001.}
   		\\\url{http://sumo.dlr.de} (\textit{4/2017})
+
+    \bibitem{prediction-paper}
+      \hbadness=1000 M. Liebner, F. Klanner, M. Baumann, C. Ruhhammer and C. Stiller.
+      \textit{Velocity-Based Driver Intent Inference at Urban Intersections in the Presence of Preceding Vehicles},
+      IEEE Intelligent Transportation Systems Magazine, vol. 5, no. 2, pp. 10-21, Summer 2013.
+      \\doi: 10.1109/MITS.2013.2246291
 
 \end{thebibliography}
 
