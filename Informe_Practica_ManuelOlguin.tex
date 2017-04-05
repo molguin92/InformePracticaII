@@ -99,6 +99,43 @@
 	breakatwhitespace=true,
 	tabsize=4}
 
+\lstdefinestyle{m_xml}{ % Estilo de lenguaje C++11
+	language=XML,
+	frame=b,
+	captionpos=b,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{purple},
+	commentstyle=\color{gray},
+	stringstyle=\color{dkgreen},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4,
+	morekeywords={vehicle, route}}
+
+\lstdefinestyle{mPython}{ % Estilo de lenguaje C++11
+	language=Python,
+	frame=b,
+	captionpos=b,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{purple},
+	commentstyle=\color{gray},
+	stringstyle=\color{dkgreen},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4}
+
 \colorlet{punct}{red!60!black}
 \definecolor{background}{HTML}{EEEEEE}
 \definecolor{delim}{RGB}{20,105,176}
@@ -269,6 +306,8 @@ SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular
 
 \subsection{Situación Previa}\label{section:situacion_previa}
 
+* hablar un poco sobre Javiera *
+
 \newpage
 \section{Trabajo Realizado}
 
@@ -285,11 +324,11 @@ Cabe destacar que las labores del practicante abarcaron la implementación del m
 
 \subsection{Estudio del software y elaboración de un prototipo inicial simple}
 
-El primer mes de la práctica se enfocó totalmente en el estudio del software especializado, enfocado principalmente en VEINS y la elaboración de modelos de sistemas de transporte inteligentes utilizando el framework. Esto además significó el aprendizaje de C++ por parte del practicante. Con el fin de realizar un aprendizaje didáctico y aplicado, se implementó además un prototipo simple de un cruce vehicular con carriles para ciclistas.
+El primer mes de la práctica se enfocó totalmente en el estudio del software especializado, concentrado principalmente en VEINS y la elaboración de modelos de sistemas de transporte inteligentes utilizando el framework. Como un \emph{bonus} adicional, esto significó el aprendizaje de C++ por parte del practicante. Con el fin de realizar un aprendizaje didáctico y aplicado, se implementó además un prototipo simple de un cruce vehicular con carriles para ciclistas, el cual se describe a continuación.
 
 \subsubsection{Prototipo inicial}
 
-El prototipo inicial se construyó en base al trabajo previamente realizado por Javiera Born (descrito en la sección \ref{section:situacion_previa}). Este consistió en una simulación muy simple, compuesta por un vehículo motorizado y una bicicleta, los cuales interactúan en un cruce. A continuación se detalla la elaboración de este prototipo, y los resultados obtenidos para la siguiente etapa del trabajo de práctica.
+El prototipo inicial se construyó en base al trabajo previamente realizado por Javiera Born (descrito en la sección \ref{section:situacion_previa}). Este consistió en una simulación muy simple, compuesta por un vehículo motorizado y una bicicleta, los cuales interactúan en un cruce. Si bien esta simulación presenta un escaso valor práctico y académico, fue de gran ayuda para que el practicante adquiriera las habilidades necesarias para el manejo del software especializado.
 
 \begin{figure}[ht]
   \centering
@@ -310,7 +349,7 @@ Cada vehículo fue modelado como una máquina de estados finita, los cuales camb
 
 \begin{description}[leftmargin=!,labelwidth=\widthof{\bfseries Automóvil}]
     \item [Bicicleta]  El comportamiento de esta es extremadamente simple. El módulo espera hasta recibir un mensaje de advertencia desde el vehículo; al recibirlo, verifica la distancia actual de la bicicleta al cruce. De ser esta menor a una distancia $D$ establecida, la bicicleta se detiene hasta recibir un segundo mensaje del automóvil, el cual confirma que este último ha finalizado su giro. Finalmente, la bicicleta resume su trayectoria hasta terminar la simulación.
-    \item [Automóvil]  El automóvil tiene un comportamiente ligeramente más complicado, ya que debe constantmente estar monitoreando su distancia al cruce para determinar cuando emitir los mensajes que espera la bicicleta. Para esto, al principio de la simulación se programa un ``automensaje'' (\emph{selfbeacon} en inglés) a ser enviado por el módulo a si mismo en el siguiente instante de simulación ($0.1$ más tarde). Al recibir dicho mensaje, se programa un nuevo \emph{selfbeacon} y se verifica si la distancia del vehículo al cruce es menor o igual a la distancia $D$ previamente mencionada. De ser así, se emite el primer mensaje de advertencia, y se cambia el estado a ``girando'', hasta detectar (mediante la misma técnica anterior de mediciones periódicas) que se encuentra nuevamente fuera del cruce (distancia $\geq D$), momento que se emite el segundo y último mensaje y se vuelve a la operación normal.
+    \item [Automóvil]  El automóvil tiene un comportamiente ligeramente más complicado, ya que debe constantmente estar monitoreando su distancia al cruce para determinar cuando emitir los mensajes que espera la bicicleta. Para esto, al principio de la simulación se programa un ``automensaje'' (\emph{selfbeacon} en inglés) a ser enviado por el módulo a si mismo en el siguiente instante de simulación ($0.1$s más tarde). Al recibir dicho mensaje, se programa un nuevo \emph{selfbeacon} y se verifica si la distancia del vehículo al cruce es menor o igual a la distancia $D$ previamente mencionada. De ser así, se emite el primer mensaje de advertencia, y se cambia el estado a ``girando'', hasta detectar (mediante la misma técnica anterior de mediciones periódicas) que se encuentra nuevamente fuera del cruce (distancia $\geq D$), momento que se emite el segundo y último mensaje y se vuelve a la operación normal.
 \end{description}
 
 Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operaciones periódicas en OMNeT++ es altamente común, y fue uno de los principales aprendizajes de esta estapa del trabajo de práctica \cite{selfmessage}.
@@ -401,8 +440,158 @@ Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operacione
 
 \newpage
 \subsection{Modelación del sistema de alarma temprana}
+
+Como se mencionó anteriormente, la segunda etapa del trabajo contemplaba la implementación de un modelo basado en el trabajo de Liebner \emph{et al.}, descrito en \cite{prediction-paper}. En esta publicación, los autores detallan un modelo predictivo del comportamiento de vehículos en intersecciones urbanas, basado en la teoría de probabilidades bayesianas *explicar algoritmo*.
+
+\subsubsection{Modelo físico de la simulación}
+
+Se optó por utilizar un escenario de SUMO con trazas vehiculares reales; es decir, un registro real del tráfico en una ciudad. De esta manera se asegura un alto grado de realismo del comportamiento de los vehículos en la simulación, lo cual es un requisito fundamental para la validación de los resultados obtenidos.
+
+El escenario \emph{TAPAS Cologne} \cite{tapascologne} fue el escogido para este fin, dada la calidad y la cantidad de datos que incluye. Este escenario describe el flujo vehicular en la ciudad de Cologne, en Alemania, durante un día completo, tanto para vehículos particulares como para el transporte público, en un mapa que abarca la ciudad en su totalidad. Por conveniencia, incluye dos sub-escenarios distintos, uno que describe completamente 24 horas de tráfico vehicular, y otro que contiene información de sólo dos horas (entre 6:00 y 8:00 a.m.). Fue este último el utilizado para el desarrollo del sistema de alarma temprana, el cual además se adaptó a la naturaleza del sistema a modelar.
+
+Dado que el sistema contempla el monitoreo de una intersección, se decidió escoger un cruce apropiado y sólo incluir las trazas de movimiento vehicular que lo incluyeran en su trayectoria. La elección del cruce se hizo de manera manual, ya que no requiere condiciones estrictas, siguiendo los siguientes pasos:
+
+\begin{enumerate}
+	\item Se seleccionó primero un grupo semi-arbritrario de intersecciones a considerar, sin semáforos y de cantidad de pistas reducidas. La primera condición es de carácter funcional -- la existencia de un semáforo se asume que elimina la necesidad de un sistema predictivo de giros sorpresivos. La segunda es de carácter más práctico; una intersección con muchas pistas agrega complejidad innecesaria a un modela en tan temprana etapa de desarrollo.
+	\item En segundo lugar, se analizaron los flujos vehiculares de cada uno de los cruces seleccionados, descartando aquellos que presentaran nula o poca presencia vehicular a lo largo de la simulación.
+	\item Finalmente se hizo la elección final, en base a la simplicidad total del cruce.
+\end{enumerate}
+
+La intersección finalmente seleccionada para la simulación fue el cruce $55063174$, compuesto por la intersección de los \emph{arcos} (calles) $132530717$, $132530803$, $7651840$ y $132530803$, caracterizada por ser un cruce entre dos calles de una pista cada una, lo cual tiene la ventaja de que limita los virajes a considerar a únicamente dos direcciones distintas. Este cruce fue modificado levemente además para incluir ciclovías al costado de ambas calles, ya que el escenario \emph{TAPAS Cologne} no incluye registros de este medio de transporte.
+
+Por otro lado, las trazas vehiculares incluídas en el escenario también debieron ser alteradas y filtradas. Dichas trazas están descritas en archivos XML (ver código \ref{sumo:routes}), compuestos por dos tipos esenciales de elementos; vehículos y rutas. Una ruta consiste en una serie de identificadores de \emph{arcos} que forman un recorrido desde una posición inicial $A$ hasta un destino $B$. Estas se asocian luego a vehículos, describiendo de esta manera el movimiento de éstos últimos por la red vehicular. Puesto que, para los fines de la simulación en cuestión, sólo interesaban aquellos vehículos que se desplazaran por la intersección seleccionada anteriormente, se optó por filtrar el archivo de rutas, eliminando todos aquellos vehículos no relevantes para el trabajo. Esto se efectuó utilizando un script escrito en Python (ver código \ref{sumo:py_filter}), y redujo el tamaño del archivo de rutas de aproximadamente 200 MB a sólo 1.5 MB, lo cual aceleró de manera bastante el tiempo de carga y de inicio del escenario en SUMO.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\linewidth]{junction.png}
+	\caption[Cruce $55063174$]{\emph{Zoom} del cruce $55063174$, escogido para la implementación del sistema de alarma temprana.}
+	\label{sumo:junction}
+\end{figure}
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=m_xml, label={sumo:routes}, caption={Extracto de trazas vehiculares del escenario TAPAS Cologne. Cada vehículo tiene asociada una ruta, la cual describe el camino que recorre este desde su origen hasta su destino.}]
+<vehicle id="37937_37937_358_0" type="pkw" depart="21600.00">
+    <route edges="328974180 133852448-AddedOnRampEdge 133852448 7854060 ..."/>
+</vehicle>
+<vehicle id="38648_38648_359_0" type="pkw" depart="21600.00">
+    <route edges="51793889 -155592914#2 -155592914#1 155592907#2 155592972 ..."/>
+</vehicle>
+<vehicle id="38750_38750_359_0" type="pkw" depart="21600.00">
+    <route edges="8437608#3 -8437608#6 -8437608#2 -189913664#3 -209682829#1 ..."/>
+</vehicle>
+<vehicle id="41314_41314_361_0" type="pkw" depart="21600.00">
+    <route edges="25326879#0 24609080#3 118427328#0 118427328#2 118427328#3 ..."/>
+</vehicle>
+<vehicle id="41690_41690_361_0" type="pkw" depart="21600.00">
+    <route edges="29337995#1 29337995#3 29337995#5 29337995#7 9250113#2 ..."/>
+</vehicle>
+<vehicle id="43455_43455_362_0" type="pkw" depart="21600.00">
+    <route edges="340575954#3 99714977#3 99714977#4 196122462#0 27892605#0 ..."/>
+</vehicle>
+\end{lstlisting}
+\end{minipage}
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=mPython, caption={Código de extracción de vehículos relevantes.}, label={sumo:py_filter}]
+import xmltodict
+
+EDGES = ['132530717#0', '132530803#1', '7651840#0', '132530803#0']
+
+with open('cologne6to8.rou.xml', 'r') as infile, \
+        open('cologne6to8.filtered.rou.xml', 'w') as outfile:
+    orig_xml = xmltodict.parse(infile.read())
+    vehicles = orig_xml['routes']['vehicle']
+    relevant_vehicles = []
+
+    for v in vehicles:
+        edges = v['route']['@edges'].split(' ')
+        for e in EDGES:
+            if e in edges and v not in relevant_vehicles:
+                relevant_vehicles.append(v)
+
+    orig_xml['routes']['vehicle'] = relevant_vehicles
+    outfile.write(xmltodict.unparse(orig_xml, pretty=True))
+
+    print(
+        '''
+Done. Filtered on edges: {e}.
+Final results: {i} cars match the desired edges.
+        '''.format(e=EDGES, i=len(relevant_vehicles))
+    )
+\end{lstlisting}
+\end{minipage}
+
+\subsubsection{Lógica de la simulación}
+
+El escenario contempla tres tipos de entidades diferentes que interactúan en el cruce:
+
+\begin{description}[leftmargin=!,labelwidth=\widthof{\bfseries Automóviles}]
+	\item [RSU]	La unidad de infraestructura inteligente, \emph{RSU} (por sus siglas en inglés, \emph{RoadSide Unit}), no ``existe'' en el escenario físico, sino que es creada y trasladada al centro de la intersección por OMNeT++ al iniciarse la simulación. La RSU tiene como labor la interpretación del estado del sistema en cada instante de tiempo; recibe datos desde los vehículos presentes y es la entidad que detecta un viraje sorpresivo y emite la advertencia correspondiente.
+
+	La funcionalidad de esta fue separada en múltiples archivos. En primer lugar, la clase \emph{BikeWarningRSU} extiende un módulo básico de OMNeT++ equipado con interfaces inalámbricas. En este se implementó la comunicación del módulo con el resto de las entidades de la simulación; en específico, la RSU recibe \emph{beacons} periódicos desde los automóviles, los cuales contienen información posicional de los vehículos, como su velocidad y posición. Esta información luego es proporcionada como parámetros al algoritmo de decisión -- si la determinación de éste último es positiva, la RSU emite una advertencia en modo \emph{broadcast} a todos los vehículos presentes en la simulación. En caso contrario se descarta el resultado.
+
+	El algoritmo de decisión en sí fue implementado en Python por S. Piña, y fue integrado a la simulación mediante la clase de C++ \emph{DecisionAlgorithm}, utilizando código Python embebido (ver código \ref{lst:embedded_python}). Esta clase inicializa la interfaz con Python, y presenta funciones de conveniencia para interactuar directamente con la implementación del algoritmo desde C++.
+	\item [Automóviles]	Los automóviles en esta simulación se consideran ``tontos'', en el sentido que no cuentan con inteligencia propia más allá de la lógica de recolección de información que luego es enviada a la RSU. Su funcionalidad se implementó en el módulo de OMNeT++ \emph{BikeWarningApplication}.
+
+	Esta clase utiliza el mismo método de \emph{selfbeacons} detallado en la etapa anterior de la práctica para periódicamente medir los parámetros físicos del vehículo (posición, velocidad y calle actual) y enviarlos a la RSU. Para este fin se utilizó el formato de mensaje por defecto del protocolo \emph{WAVE} (\emph{Wireless Access for Vehicular Environments}, una variante del estándar IEEE802.11 para comunicaciones en contextos de sistemas de transporte inteligentes \cite{80211wave}). La implementación de este mensaje en OMNeT++ sólo cuenta con un campo de texto para el \emph{payload}, por lo cual la información requerida debió codificarse en \emph{JSON} antes de ser enviada. El código \ref{lst:send_json} ilustra el método encargado de la recolección y envío de datos en el módulo.
+	\item [Bicicletas]	Finalmente, las bicicletas también se implementaron en \emph{BikeManeuver}, sin embargo su comportamiento es aún más simple que el de los automóviles. Simplemente monitorean de manera pasiva las emisiones del RSU, y al recibir una advertencia se detienen por un periodo de tiempo predeterminado antes de seguir su trayectoria normal. Se decidió optar por esta simplicidad para priorizar primero la validación del funcionamiento fundamental de la teoría antes de implementar un modelo más complejo.
+\end{description}
+
+\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=CPP, caption={Código encargado de la medición periódica y envío de datos a la RSU en \emph{BikeWarningApplication}.}, label={lst:send_json}]
+void BikeWarningApplication::carHandleSelfMsg(cMessage *msg)
+{
+    switch (msg->getKind()) {
+            case SEND_BEACON_EVT: {
+                //std::cout << "Sending beacon: ";
+                WaveShortMessage* wsm = prepareWSM("beacon", beaconLengthBits,
+													type_CCH, beaconPriority,
+													-1, -1);
+
+				// get current position, speed, lane and id
+                Coord pos = mobility->getCurrentPosition();
+                double speed = mobility->getSpeed();
+                std::string id = mobility->getExternalId();
+                std::string lane_id = traciVehicle->getLaneId();
+
+				// encode into JSON for easy packing into WAVE short message.
+                json data_j = {
+                        {"id", id},
+                        {"vel", speed},
+                        {"pos_x", pos.x},
+                        {"pos_y", pos.y},
+                        {"lane_id", lane_id}
+                };
+
+                std::string jdata = data_j.dump();
+                //std::cout << jdata << std::endl;
+
+				// load payload into message and send it
+                wsm->setWsmData(jdata.c_str());
+                sendWSM(wsm);
+                scheduleAt(simTime() + par("beaconInterval").doubleValue(), sendBeaconEvt);
+                break;
+            }
+            default: {
+                if (msg)
+                    DBG << "APP: Error: Got Self Message of unknown kind! Name: " << msg->getName() << endl;
+                break;
+            }
+        }
+}
+\end{lstlisting}
+\end{minipage}
+
+
 \newpage
 \section{Conclusiones}
+
+Desafortunadamente, a pesar del trabajo realizado por el practicante y su colega, la simulación no fue del todo fructuosa y hasta el día de hoy se encuentra congelado su desarrollo. El principal problema surge de que la teoría predictiva está basada en el estudio del comportamiento de los vehículos dada la existencia de otro vehículo en la pista, frente al primero, y la adaptación de este modelo a uno basado únicamente en los datos individuales de cada vehículo presentó problemas inesperados.
+
+Sin embargo, de todos modos se lograron resultados parciales, los cuales fueron presentados en el \emph{Taller de Inteligencia Urbana} en Santa Cruz, Región de O'Higgins, en Noviembre del 2016 por S. Piña. Además, se presentó un borrador inicial del trabajo al profesor Falko Dressler (uno de los creadores de VEINS, y un reconocido investigador en el área de Sistemas de Transporte Inteligente) en su visita a Chile a principios de Agosto.
+
+Finalmente, el trabajo generó un interés profundo en el practicante, específicamente en el tema de simuladores para ITS. Actualmente, este interés se ha visto concretado en un trabajo de memoria a desarrollarse durante el presente semestre.
+
 \newpage
 \begin{thebibliography}{5}
     \bibitem{TICS} \emph{Tecnologías de la Información y Comunicaciones} - \url{https://es.wikipedia.org/wiki/Tecnolog%C3%ADas_de_la_informaci%C3%B3n_y_la_comunicaci%C3%B3n}
@@ -459,6 +648,11 @@ Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operacione
 	  \hbadness=1000 OMNeT++ Simulation Manual
 	  \textit{4.7.1 Self-Messages}
 	  \\\url{https://omnetpp.org/doc/omnetpp/manual/#sec:simple-modules:self-messages} (\textit{4/2017})
+
+	\bibitem{tapascologne}
+	  \hbadness=1000 TAPAS Cologne
+	  \textit{Scenario describing the traffic in the city of Cologne, Germany, during a whole day.}
+	  \\\url{http://sumo.dlr.de/wiki/Data/Scenarios/TAPASCologne} (04/2017)
 
 \end{thebibliography}
 \newpage
@@ -532,6 +726,65 @@ case FSM_Exit(CAR_TURNING):
 }
 \end{lstlisting}
 
+\begin{lstlisting}[style=CPP, caption={Llamado a código Python externo desde C++ en el módulo \emph{DecisionAlgorithm}}, label={lst:embedded_python}]
+DecisionAlgorithm::DecisionAlgorithm() {
+    Py_Initialize();
+    PyRun_SimpleString( "import os, sys, random, traceback\n"
+                        "sys.path.append(os.getcwd())\n");
+    pName = PyUnicode_DecodeFSDefault(DECISION_ALGO_SCRIPT);
+    pModule = PyImport_Import(pName);
+    if(pModule == NULL)
+    {
+        std::cout << "Null pModule" << std::endl;
+        throw -1;
+    }
+    pFunc = PyObject_GetAttrString(pModule, DECISION_ALGO_FUNC);
+    pAddEntry = PyObject_GetAttrString(pModule, DECISION_ALGO_ADDENTRYLANE);
+    pAddExit = PyObject_GetAttrString(pModule, DECISION_ALGO_ADDEXITLANE);
+
+    if(!(pFunc && PyCallable_Check(pFunc)))
+    {
+        std::cout << "Null Decision Function" << std::endl;
+        throw -1;
+    }
+    else if(!(pAddEntry && PyCallable_Check(pAddEntry)))
+    {
+        std::cout << "Null Entry Lane Function" << std::endl;
+        throw -1;
+    }
+    else if(!(pAddExit && PyCallable_Check(pAddExit)))
+    {
+        std::cout << "Null Exit Lane Function" << std::endl;
+        throw -1;
+    }
+
+}
+
+double DecisionAlgorithm::checkTurn(double velocity, double pos_x, double pos_y, std::string car_id, std::string lane_id)
+{
+
+    pArgs = PyTuple_New(5);
+    PyTuple_SetItem(pArgs, 0, PyFloat_FromDouble(velocity));
+    PyTuple_SetItem(pArgs, 1, PyFloat_FromDouble(pos_x));
+    PyTuple_SetItem(pArgs, 2, PyFloat_FromDouble(pos_y));
+    PyTuple_SetItem(pArgs, 3, PyByteArray_FromStringAndSize(car_id.c_str(), car_id.length()));
+    PyTuple_SetItem(pArgs, 4, PyByteArray_FromStringAndSize(lane_id.c_str(), lane_id.length()));
+
+
+    PyObject* result = PyObject_CallObject(pFunc, pArgs);
+    if(result == NULL)
+    {
+        std::cerr << "null return, something went wrong" << std::endl;
+        throw -1;
+    }
+
+    //long final = PyLong_AsLong(result);
+    double final = PyFloat_AsDouble(result);
+    Py_DECREF(pArgs);
+
+    return final;// == final;
+}
+\end{lstlisting}
 
 
 % ============= FIN DE DOCUMENTO ==============
