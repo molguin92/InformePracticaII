@@ -243,7 +243,11 @@ Tel: & +56 9 7463 6997\\
 \newpage
 \section{Resumen}
 
-El presente documento detalla el trabajo realizado entre Agosto y Octubre del 2016 por el alumno Manuel Olguín en el Grupo de Investigación en Wireless Networking del Departamento de Ingeniería Eléctrica de la Universidad de Chile. Dicho trabajo se realizó bajo la supervisión de la profesora Sandra Céspedes, y consistió en la modelación de un sistema de alarma temprana para ciclistas en el contexto de un Sistema de Transporte Inteligente.
+El presente documento detalla el trabajo realizado entre Agosto y Octubre del 2016 por el alumno Manuel Olguín en el Grupo de Investigación en Wireless Networking del Departamento de Ingeniería Eléctrica de la Universidad de Chile. Dicho trabajo se realizó bajo la supervisión de la profesora Sandra Céspedes, y se dividió en dos etapas.
+
+En primer lugar, se destinó la primera mitad del periódo de práctica al aprendizaje de un conjunto de software especializado para la elaboración de simulaciones de Sistemas de Transporte Inteligente. Dada la complejidad y la especificidad de estos programas, además de la poca experiencia previa del participante con el lenguaje de programación C++, se estimó conveniente que se destinara un tiempo no menor al estudio y elaboración de un escenario simple de comunicación inter-vehicular, con el fin de evaluar sus aptitudes para la segunda parte de la práctica.
+
+La segunda mitad de la práctica se destinó a la elaboración de un sistema de alarma temprana para ciclistas inmersos en un contexto de Sistemas de Transporte Inteligente, basado en la teoría expuesta en un artículo de investigación.
 
 \newpage
 \section{Introducción}
@@ -253,7 +257,7 @@ El Grupo de Investigación en Wireless Networking (en adelante, \emph{el Grupo})
 
 \subsection{Equipo de Trabajo}
 
-Los miembros del grupo son estudiantes de pre- y posgrado, además de profesionales ligados a las TICs, de diversos orígenes, especialidades e incluso nacionalidades. En específico, el trabajo realizado por el practicante fue desarrollado bajo la supervisión de la doctora Sandra Céspedes y en colaboración con un estudiante de pregrado del DIE.
+Los miembros del grupo son estudiantes de pre- y posgrado, además de profesionales ligados a las TICs, de diversos orígenes, especialidades e incluso nacionalidades. En específico, el trabajo realizado por el practicante fue desarrollado bajo la supervisión de la doctora Sandra Céspedes y en colaboración primero con una ex-alumna del DCC, y luego en estrecha coordinación con un estudiante de pregrado del DIE.
 
 \newpage
 \subsection{Software y Conceptos Importantes}
@@ -272,13 +276,87 @@ Los Sistemas de Transporte Inteligente (en adelante \emph{ITS}, por sus siglas e
 
 \end{description}
 
-El factor común entre ambas categorías es la necesidad de extraer información en tiempo real desde el entorno, la cual debe procesarse y en muchos casos generar una respuesta a transmitir al usuario. Para este fin, actualmente se utilizan tecnologías de comunicación inalámbricas, tanto de área local (los estándares incluídos en la familia WLAN, IEEE 802.11), como de área personal (WPAN, IEEE 802.15) \cite{80211dailey,80215vanet,80211wave}.
+El factor común entre ambas categorías es la necesidad de extraer información en tiempo real desde el entorno, la cual debe procesarse y en muchos casos generar una respuesta a transmitir al usuario. Para este fin, actualmente se utilizan tecnologías de comunicación inalámbricas, tanto de área local (los estándares incluídos en la familia WLAN, IEEE 802.11), como de área personal (WPAN, IEEE 802.15) y redes móviles (3G, 4G, LTE) \cite{80211dailey,80215vanet,80211wave,v2vlte}.
 
 \subsubsection{OMNeT++}
 
-\emph{Objective Modular Network Testbed in C++}, mejor conocido como OMNeT++ \cite{omnet}, es un \emph{framework} y librería para la simulación de sistemas de eventos discretos, principalmente utilizado para la simulación y análisis de redes de comunicaciones. Consiste en un conjunto de módulos y librerías en C++, además de un entorno de desarrollo integrado (en adelante, \emph{IDE} por sus siglas en inglés -- \emph{Integrated Development Environment}) y una interfaz gráfica, los cuales posibilitan la construcción de simulaciones dinámicas y extensibles tanto de sistemas cableados como inalámbricos.
+\emph{Objective Modular Network Testbed in C++}, mejor conocido como OMNeT++ \cite{omnet}, es un \emph{framework} y librería para la simulación de sistemas de eventos discretos, principalmente utilizado para la simulación y análisis de redes de comunicaciones. Consiste en un conjunto de módulos y librerías en C++, además de un entorno de desarrollo integrado (en adelante, \emph{IDE} por sus siglas en inglés -- \emph{Integrated Development Environment}) y un entorno gráfico de simulación (ilustrado en la figura \ref{fig:omnetgui}), los cuales posibilitan la construcción de simulaciones dinámicas y extensibles tanto de sistemas cableados como inalámbricos.
+
+En el \emph{framework}, redes de comunicaciones se modelan mediante \emph{módulos}, los cuales se describen en archivos \emph{.ned} en conjunto con clases de C++. Estos modelan entidades en una red y describen su topología, además de sus características físicas (canales de entrada, tipo de radio, etc) y comportamiento. Por ejemplo, el código \ref{omnet_ned} corresponde a uno de los ejemplos incluídos con OMNeT++ (\emph{Tictoc1.ned}), y describe un dispositivo \emph{Txc1} con una puerta de entrada y una de salida, y una red \emph{Tictoc1} compuesta por dos de estos dispositivos conectados entre sí. El comportamiento de estos se implementa en una clase de C++ también llamada \emph{Txc1}, representada en el código \ref{lst:txc1_cc}.
 
 OMNeT++ es software libre, de fuente abierta, y altamente popular en la comunidad académica.
+
+\noindent\begin{minipage}{\linewidth}
+	\begin{lstlisting}[style=CPP, caption={Descripción de un módulo simple de OMNeT y su red asociada.}, label={omnet_ned}]
+simple Txc1
+{
+    gates:
+        input in;
+        output out;
+}
+
+//
+// Two instances (tic and toc) of Txc1 connected both ways.
+// Tic and toc will pass messages to one another.
+//
+network Tictoc1
+{
+    submodules:
+        tic: Txc1;
+        toc: Txc1;
+    connections:
+        tic.out --> {  delay = 100ms; } --> toc.in;
+        tic.in <-- {  delay = 100ms; } <-- toc.out;
+}
+	\end{lstlisting}
+\end{minipage}
+
+\noindent\begin{minipage}{\linewidth}
+	\begin{lstlisting}[style=CPP, label={lst:txc1_cc}, caption={Lógica del módulo \emph{Txc1}.}]
+#include <string.h>
+#include <omnetpp.h>
+/**
+* Derive the Txc1 class from cSimpleModule. In the Tictoc1 network,
+* both the `tic' and `toc' modules are Txc1 objects, created by OMNeT++
+* at the beginning of the simulation.
+*/
+class Txc1 : public cSimpleModule
+{
+protected:
+	// The following redefined virtual function holds the algorithm.
+	virtual void initialize();
+	virtual void handleMessage(cMessage *msg);
+};
+
+// The module class needs to be registered with OMNeT++
+Define_Module(Txc1);
+
+void Txc1::initialize()
+{
+	// Initialize is called at the beginning of the simulation.
+	// To bootstrap the tic-toc-tic-toc process, one of the modules needs
+	// to send the first message. Let this be `tic'.
+
+	// Am I Tic or Toc?
+	if (strcmp("tic", getName()) == 0)
+	{
+	    // create and send first message on gate "out". "tictocMsg" is an
+	    // arbitrary string which will be the name of the message object.
+	    cMessage *msg = new cMessage("tictocMsg");
+	    send(msg, "out");
+	}
+}
+
+void Txc1::handleMessage(cMessage *msg)
+{
+	// The handleMessage() method is called whenever a message arrives
+	// at the module. Here, we just send it to the other module, through
+	// gate `out'. Because both `tic' and `toc' does the same, the message
+	// will bounce between the two.
+	send(msg, "out");
+}
+	\end{lstlisting}
+\end{minipage}
 
 
 \begin{figure}[ht]
@@ -290,7 +368,9 @@ OMNeT++ es software libre, de fuente abierta, y altamente popular en la comunida
 
 \subsubsection{SUMO}
 
-SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular de fuente abierta desarrollado originalmente por el Instituto de Sistemas de Transporte del Centro Aeroespacial Alemán (DLR, por sus siglas en alemán -- \emph{Deutsches Zentrum für Luft- und Raumfahrt e.V.}) \cite{sumo}. Es un simulador microscópico, en el cual cada vehículo es simulado de manera particular, moviéndose individualmente por la red.
+SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular de fuente abierta desarrollado originalmente por el Instituto de Sistemas de Transporte del Centro Aeroespacial Alemán (DLR, por sus siglas en alemán -- \emph{Deutsches Zentrum für Luft- und Raumfahrt e.V.}) \cite{sumo}. Es un simulador microscópico, lo cual significa que modela de manera individual y particular cada uno de vehículos presentes en sus simulaciones, a diferencia de simuladores macroscópicos, los cuales modelan el flujo vehicular como un fluído. Esta naturaleza microscópica presenta la ventaja de un mayor realismo en el movimiento de los vehículos en la red de transporte, a cambio de mayores requisitos de capacidad de procesamiento.
+
+Las simulaciones de SUMO se implementan en una serie de archivos XML que describen la red, los vehículos presentes y sus trayectorias y eventual infraestructura no-vial (\emph{polígonos}) presente. Además se debe contar con un archivo \emph{.cfg} que describa los parámetros propios de la simulación (por ejemplo, tiempo de inicio, el largo de cada instante de simulación y el tiempo final).
 
 \begin{figure}[ht]
   \centering
@@ -301,19 +381,21 @@ SUMO (\emph{Simulation of Urban MObility}) es un simulador de tráfico vehicular
 
 \subsubsection{VEINS}
 
-\emph{VEhicles In Network Simulation}, \emph{VEINS}, es un framework de fuente abierta para la simulación, tanto en su aspecto de comunicaciones como de transporte, de Sistemas de Transporte Inteligente.
+\emph{VEhicles In Network Simulation}, \emph{VEINS}, es un \emph{framework} de fuente abierta para la simulación, tanto en su aspecto de comunicaciones como de transporte, de Sistemas de Transporte Inteligente a través de la integración de OMNeT++ con SUMO.
+
+A través de VEINS, estos simuladores se ejecutan en paralelo, comunicándose en tiempo real mediante un \textit{socket} utilizando el protocolo TCP; SUMO proporciona las trazas de movimiento de los elementos en la simulación a la vez que OMNeT++ simula el comportamiento de la red de comunicaciones. Además, mediante este esquema, OMNeT++ también puede modificar directamente el comportamiento del modelo de transporte, por ejemplo alterando la velocidad de un vehículo en respuesta a un mensaje específico obtenido a través de la red de comunicaciones. De esta manera, el \textit{framework} en cuestión permite modelar sistemas complejos y dinámicos, que reflejan de buena manera la realidad, en donde, por ejemplo, un conductor podría reaccionar a información sobre un accidente más adelante en su ruta, alterando su trayectoria para evitar la calle afectada.
 
 
 \subsection{Situación Previa}\label{section:situacion_previa}
 
-* hablar un poco sobre Javiera *
+Antes de la llegada del practicante existía poco avance en las tareas propuestas. Si bien la estudiante anterior que había comenzado a trabajar en este tema (Javiera Born, ex-alumna del Departamento de Ciencias de la Computación) ya había construído un escenario simple de SUMO, no se había implementado en VEINS y OMNeT++ todavía, por lo que era una simulación simple y sin inteligencia. De todos modos, dicho escenario sirvió como una excelente base para la primera etapa de la práctica.
 
 \newpage
 \section{Trabajo Realizado}
 
-El trabajo realizado tenía como fin último la elaboración de un prototipo de un sistema de alerta temprana para ciclistas en un ITS. El fin de este sistema era el de predecir, mediante un modelo de probabilidades bayesianas descrito por Liebner \textit{et al.} en \cite{prediction-paper}, la probabilidad de un giro sorpresivo de un vehículo en un cruce, y notificar esto a ciclistas cercanos a dicho cruce (se asumieron ciclistas y vehículos en el contexto de un ITS, dotados de capacidades de comunicación inalámbrica).
+El trabajo realizado tenía como fin último la elaboración de un prototipo de un sistema de alerta temprana para ciclistas en un ITS. El objetivo de este sistema es el de predecir, mediante un modelo de probabilidades bayesianas descrito por Liebner \textit{et al.} en \cite{prediction-paper}, la probabilidad de un giro sorpresivo de un vehículo en un cruce, y notificar esto a ciclistas cercanos a dicho cruce (se asumieron ciclistas y vehículos en el contexto de un ITS, dotados de capacidades de comunicación inalámbrica), con el fin de reducir las colisiones entre automóviles y ciclistas -- y potencialmente salvando vidas.
 
-Este trabajo se dividió entonces en dos partes:
+Este trabajo se dividió en dos partes:
 
 \begin{enumerate}
   \item Estudio y comprensión del software especializado OMNeT++, SUMO y VEINS, y la posterior elaboración de un prototipo simple para ilustrar la factibilidad del proyecto.
@@ -337,19 +419,19 @@ El prototipo inicial se construyó en base al trabajo previamente realizado por 
   \label{fig:sumo_prototype}
 \end{figure}
 
-\subsubsection{Parámetros físicos de la simulación}
+\subsubsection{Implementación en SUMO}
 
-El aspecto de transporte de la simulación no presenta grandes cambios respecto a lo desarrollado anteriormente por J. Born -- se reutilzó el cruce vehicular simple compuesto por una vía de tres pistas y otra de dos, ambas con ciclovías a los costados. Se modificaron los flujos vehiculares para que consistieran únicamente en un automóvil y una bicicleta, y para sincronizar su llegada al cruce y poder simular la detención de la bici en reacción a un mensaje de viraje emitido por el automóvil (detalles de la implementación de esto en la sección \ref{section:prot_communication}).
+El aspecto de transporte de la simulación no presenta grandes cambios respecto a lo desarrollado anteriormente por J. Born -- se reutilzó el cruce vehicular simple compuesto por una vía de tres pistas y otra de dos, ambas con ciclovías a los costados. Se modificaron los flujos vehiculares para que consistieran únicamente en un automóvil y una bicicleta, y para sincronizar su llegada al cruce y poder simular la detención de la bici en reacción a un mensaje de viraje emitido por el automóvil (detalles de la implementación de esto en la sección \ref{section:prot_communication}). Ver figura \ref{fig:sumo_prototype} para una ilustración del modelo en SUMO.
 
-\subsubsection{Simulación de comunicación inalámbrica y lógica?}\label{section:prot_communication}
+\subsubsection{Implementación en OMNeT++}\label{section:prot_communication}
 
 La lógica de la simulación se implementó en un módulo de OMNeT++ llamado \emph{BikeManeuver}. El comportamiento de ambos vehículos fue implementado en este único módulo; al iniciar la simulación, se verifica (entre otros parámetros) el identificador del vehículo, en base a lo cual se asigna un valor a un \emph{flag} que determina el comportamiento del módulo en el resto de la simulación.
 
 Cada vehículo fue modelado como una máquina de estados finita, los cuales cambian de estado en respuesta a estímulos exteriores y/o interiores (la figura \ref{diag:states} ilustra estos diagramas de estado). A continuación se detalla el comportamiento de ambos, y el código \ref{lst:simple_car_fsm} expone un extracto del código del módulo.
 
 \begin{description}[leftmargin=!,labelwidth=\widthof{\bfseries Automóvil}]
-    \item [Bicicleta]  El comportamiento de esta es extremadamente simple. El módulo espera hasta recibir un mensaje de advertencia desde el vehículo; al recibirlo, verifica la distancia actual de la bicicleta al cruce. De ser esta menor a una distancia $D$ establecida, la bicicleta se detiene hasta recibir un segundo mensaje del automóvil, el cual confirma que este último ha finalizado su giro. Finalmente, la bicicleta resume su trayectoria hasta terminar la simulación.
-    \item [Automóvil]  El automóvil tiene un comportamiente ligeramente más complicado, ya que debe constantmente estar monitoreando su distancia al cruce para determinar cuando emitir los mensajes que espera la bicicleta. Para esto, al principio de la simulación se programa un ``automensaje'' (\emph{selfbeacon} en inglés) a ser enviado por el módulo a si mismo en el siguiente instante de simulación ($0.1$s más tarde). Al recibir dicho mensaje, se programa un nuevo \emph{selfbeacon} y se verifica si la distancia del vehículo al cruce es menor o igual a la distancia $D$ previamente mencionada. De ser así, se emite el primer mensaje de advertencia, y se cambia el estado a ``girando'', hasta detectar (mediante la misma técnica anterior de mediciones periódicas) que se encuentra nuevamente fuera del cruce (distancia $\geq D$), momento que se emite el segundo y último mensaje y se vuelve a la operación normal.
+    \item [Bicicleta]  El comportamiento de este vehículo es simple. El módulo espera hasta recibir un mensaje de advertencia desde el automóvil; al recibirlo, verifica la distancia actual de la bicicleta al cruce. De ser esta menor a una distancia $D$ establecida, la bicicleta se detiene hasta recibir un segundo mensaje del automóvil, el cual confirma que este último ha finalizado su giro. Finalmente, la bicicleta resume su trayectoria hasta terminar la simulación.
+    \item [Automóvil]  El automóvil tiene un comportamiento ligeramente más complicado, ya que debe constantmente estar monitoreando su distancia al cruce para determinar cuándo emitir los mensajes que espera la bicicleta. Para esto, al principio de la simulación se programa un ``automensaje'' (\emph{selfbeacon} en inglés) a ser enviado por el módulo a si mismo en el siguiente instante de simulación ($0.1$s más tarde). Al recibir dicho mensaje, se programa un nuevo \emph{selfbeacon} y se verifica si la distancia del vehículo al cruce es menor o igual a la distancia $D$ previamente mencionada. De ser así, se emite el primer mensaje de advertencia, y se cambia el estado a ``girando'', hasta detectar (mediante la misma técnica anterior de mediciones periódicas) que se encuentra nuevamente fuera del cruce (distancia $\geq D$), momento que se emite el segundo y último mensaje y se vuelve a la operación normal.
 \end{description}
 
 Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operaciones periódicas en OMNeT++ es altamente común, y fue uno de los principales aprendizajes de esta estapa del trabajo de práctica \cite{selfmessage}.
@@ -358,7 +440,7 @@ Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operacione
 \begin{figure}
     \centering
     \subfloat[Bicicleta]{
-        \begin{tikzpicture}[scale=0.2, align=center]
+        \begin{tikzpicture}[scale=0.17, align=center]
             \tikzstyle{every node}+=[inner sep=0pt]
             \draw [black] (13,-12.8) circle (3);
             \draw (13,-12.8) node {IDLE};
@@ -389,7 +471,7 @@ Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operacione
     }
     \par\medskip
     \subfloat[Automóvil]{
-        \begin{tikzpicture}[scale=0.2, align=center]
+        \begin{tikzpicture}[scale=0.17, align=center]
             \tikzstyle{every node}+=[inner sep=0pt]
             \draw [black] (14.9,-7.3) circle (3);
             \draw (14.9,-7.3) node {INIT};
@@ -441,9 +523,11 @@ Cabe notar que la técnica de uso de \emph{selfbeacons} para realizar operacione
 \newpage
 \subsection{Modelación del sistema de alarma temprana}
 
-Como se mencionó anteriormente, la segunda etapa del trabajo contemplaba la implementación de un modelo basado en el trabajo de Liebner \emph{et al.}, descrito en \cite{prediction-paper}. En esta publicación, los autores detallan un modelo predictivo del comportamiento de vehículos en intersecciones urbanas, basado en la teoría de probabilidades bayesianas *explicar algoritmo*.
+Como se mencionó anteriormente, la segunda etapa del trabajo contemplaba la implementación de un sistema de alarma temprana para ciclistas en cruces no regulados, basado en el trabajo de Liebner \emph{et al.}, descrito en \cite{prediction-paper}. En esta publicación, los autores detallan un modelo predictivo del comportamiento de vehículos en intersecciones urbanas, basado en la teoría de probabilidades bayesianas.
 
-\subsubsection{Modelo físico de la simulación}
+En términos muy simplificados, el modelo predictivo se basa en la categorización de los conductores en base a su comportamiento vial (aceleración promedio, velocidad máxima, etc.), para luego contrastar su comportamiento al acercarse a un cruce. En base a esta comparación, se calcula la probabilidad del giro.
+
+\subsubsection{Implementación en SUMO}
 
 Se optó por utilizar un escenario de SUMO con trazas vehiculares reales; es decir, un registro real del tráfico en una ciudad. De esta manera se asegura un alto grado de realismo del comportamiento de los vehículos en la simulación, lo cual es un requisito fundamental para la validación de los resultados obtenidos.
 
@@ -459,7 +543,9 @@ Dado que el sistema contempla el monitoreo de una intersección, se decidió esc
 
 La intersección finalmente seleccionada para la simulación fue el cruce $55063174$, compuesto por la intersección de los \emph{arcos} (calles) $132530717$, $132530803$, $7651840$ y $132530803$, caracterizada por ser un cruce entre dos calles de una pista cada una, lo cual tiene la ventaja de que limita los virajes a considerar a únicamente dos direcciones distintas. Este cruce fue modificado levemente además para incluir ciclovías al costado de ambas calles, ya que el escenario \emph{TAPAS Cologne} no incluye registros de este medio de transporte.
 
-Por otro lado, las trazas vehiculares incluídas en el escenario también debieron ser alteradas y filtradas. Dichas trazas están descritas en archivos XML (ver código \ref{sumo:routes}), compuestos por dos tipos esenciales de elementos; vehículos y rutas. Una ruta consiste en una serie de identificadores de \emph{arcos} que forman un recorrido desde una posición inicial $A$ hasta un destino $B$. Estas se asocian luego a vehículos, describiendo de esta manera el movimiento de éstos últimos por la red vehicular. Puesto que, para los fines de la simulación en cuestión, sólo interesaban aquellos vehículos que se desplazaran por la intersección seleccionada anteriormente, se optó por filtrar el archivo de rutas, eliminando todos aquellos vehículos no relevantes para el trabajo. Esto se efectuó utilizando un script escrito en Python (ver código \ref{sumo:py_filter}), y redujo el tamaño del archivo de rutas de aproximadamente 200 MB a sólo 1.5 MB, lo cual aceleró de manera bastante el tiempo de carga y de inicio del escenario en SUMO.
+Por otro lado, las trazas vehiculares incluídas en el escenario también debieron ser alteradas y filtradas. Dichas trazas están descritas en archivos XML (ver código \ref{sumo:routes}), compuestos por dos tipos esenciales de elementos; vehículos y rutas. Una ruta consiste en una serie de identificadores de \emph{arcos} que forman un recorrido desde una posición inicial $A$ hasta un destino $B$. Estas se asocian luego a vehículos, describiendo de esta manera el movimiento de éstos últimos por la red vehicular. Puesto que, para los fines de la simulación en cuestión, sólo interesaban aquellos vehículos que se desplazaran por la intersección seleccionada anteriormente, se optó por filtrar el archivo de rutas, eliminando todos aquellos vehículos no relevantes para el trabajo. Esto se efectuó utilizando un script escrito en Python (ver código \ref{sumo:py_filter}), y redujo el tamaño del archivo de rutas de aproximadamente 200 MB a sólo 1.5 MB, lo cual aceleró de manera considerable el tiempo de carga y de inicio del escenario en SUMO.
+
+Finalmente, se optó además por no incluir información de la infraestructura presente en la ciudad en la simulación, ya que 1. agregaba considerable \emph{overhead} a la carga y ejecución del escenario y 2. el rango de comunicación inalámbrica a efectuar es lo suficientemente acotado como para poder desestimar el impacto posible de edificios y estructuras en las cercanías del cruce (por lo menos en las etapas tempranas de desarrollo).
 
 \begin{figure}
 	\centering
@@ -521,7 +607,7 @@ Final results: {i} cars match the desired edges.
 \end{lstlisting}
 \end{minipage}
 
-\subsubsection{Lógica de la simulación}
+\subsubsection{Implementación en OMNeT++}
 
 El escenario contempla tres tipos de entidades diferentes que interactúan en el cruce:
 
@@ -531,9 +617,10 @@ El escenario contempla tres tipos de entidades diferentes que interactúan en el
 	La funcionalidad de esta fue separada en múltiples archivos. En primer lugar, la clase \emph{BikeWarningRSU} extiende un módulo básico de OMNeT++ equipado con interfaces inalámbricas. En este se implementó la comunicación del módulo con el resto de las entidades de la simulación; en específico, la RSU recibe \emph{beacons} periódicos desde los automóviles, los cuales contienen información posicional de los vehículos, como su velocidad y posición. Esta información luego es proporcionada como parámetros al algoritmo de decisión -- si la determinación de éste último es positiva, la RSU emite una advertencia en modo \emph{broadcast} a todos los vehículos presentes en la simulación. En caso contrario se descarta el resultado.
 
 	El algoritmo de decisión en sí fue implementado en Python por S. Piña, y fue integrado a la simulación mediante la clase de C++ \emph{DecisionAlgorithm}, utilizando código Python embebido (ver código \ref{lst:embedded_python}). Esta clase inicializa la interfaz con Python, y presenta funciones de conveniencia para interactuar directamente con la implementación del algoritmo desde C++.
-	\item [Automóviles]	Los automóviles en esta simulación se consideran ``tontos'', en el sentido que no cuentan con inteligencia propia más allá de la lógica de recolección de información que luego es enviada a la RSU. Su funcionalidad se implementó en el módulo de OMNeT++ \emph{BikeWarningApplication}.
 
-	Esta clase utiliza el mismo método de \emph{selfbeacons} detallado en la etapa anterior de la práctica para periódicamente medir los parámetros físicos del vehículo (posición, velocidad y calle actual) y enviarlos a la RSU. Para este fin se utilizó el formato de mensaje por defecto del protocolo \emph{WAVE} (\emph{Wireless Access for Vehicular Environments}, una variante del estándar IEEE802.11 para comunicaciones en contextos de sistemas de transporte inteligentes \cite{80211wave}). La implementación de este mensaje en OMNeT++ sólo cuenta con un campo de texto para el \emph{payload}, por lo cual la información requerida debió codificarse en \emph{JSON} antes de ser enviada. El código \ref{lst:send_json} ilustra el método encargado de la recolección y envío de datos en el módulo.
+	\item [Automóviles]	Los automóviles en esta simulación carecen de inteligencia, en el sentido que no cuentan con inteligencia propia más allá de la lógica de recolección de información que luego es enviada a la RSU. Su funcionalidad se implementó en el módulo de OMNeT++ \emph{BikeWarningApplication}.
+
+	Esta clase utiliza el mismo método de \emph{selfbeacons} detallado en la etapa anterior de la práctica para periódicamente medir los parámetros físicos del vehículo (posición, velocidad y calle actual) y enviarlos a la RSU (ver código \ref{lst:send_json}). Para este fin se utilizó el formato de mensaje por defecto del protocolo \emph{WAVE} (\emph{Wireless Access for Vehicular Environments}, una variante del estándar IEEE802.11 para comunicaciones en contextos de sistemas de transporte inteligentes \cite{80211wave}). La implementación de este mensaje en OMNeT++ sólo cuenta con un campo de texto para el \emph{payload}, por lo cual la información requerida debió codificarse en \emph{JSON} antes de ser enviada. El código \ref{lst:send_json} ilustra el método encargado de la recolección y envío de datos en el módulo.
 	\item [Bicicletas]	Finalmente, las bicicletas también se implementaron en \emph{BikeManeuver}, sin embargo su comportamiento es aún más simple que el de los automóviles. Simplemente monitorean de manera pasiva las emisiones del RSU, y al recibir una advertencia se detienen por un periodo de tiempo predeterminado antes de seguir su trayectoria normal. Se decidió optar por esta simplicidad para priorizar primero la validación del funcionamiento fundamental de la teoría antes de implementar un modelo más complejo.
 \end{description}
 
@@ -586,11 +673,13 @@ void BikeWarningApplication::carHandleSelfMsg(cMessage *msg)
 \newpage
 \section{Conclusiones}
 
-Desafortunadamente, a pesar del trabajo realizado por el practicante y su colega, la simulación no fue del todo fructuosa y hasta el día de hoy se encuentra congelado su desarrollo. El principal problema surge de que la teoría predictiva está basada en el estudio del comportamiento de los vehículos dada la existencia de otro vehículo en la pista, frente al primero, y la adaptación de este modelo a uno basado únicamente en los datos individuales de cada vehículo presentó problemas inesperados.
+En términos de los objetivos planteados al inicio de la práctica, se evalúa de manera positiva el trabajo realizado por el practicante. Se lograron los principales objetivos de aprendizaje de software especializado y de teoría de sistemas de transportes inteligentes.
 
-Sin embargo, de todos modos se lograron resultados parciales, los cuales fueron presentados en el \emph{Taller de Inteligencia Urbana} en Santa Cruz, Región de O'Higgins, en Noviembre del 2016 por S. Piña. Además, se presentó un borrador inicial del trabajo al profesor Falko Dressler (uno de los creadores de VEINS, y un reconocido investigador en el área de Sistemas de Transporte Inteligente) en su visita a Chile a principios de Agosto.
+Se lograron buenos resultados parciales, los cuales fueron presentados en el \emph{Taller de Inteligencia Urbana} en Santa Cruz, Región de O'Higgins, en Noviembre del 2016 por S. Piña. Además, se presentó un borrador inicial del trabajo al profesor Falko Dressler (uno de los creadores de VEINS, y un reconocido investigador en el área de Sistemas de Transporte Inteligente) en su visita a Chile a principios de Agosto, recibiendo un alto grado de optimismo respecto a la investigación por parte del académico.
 
-Finalmente, el trabajo generó un interés profundo en el practicante, específicamente en el tema de simuladores para ITS. Actualmente, este interés se ha visto concretado en un trabajo de memoria a desarrollarse durante el presente semestre.
+El trabajo tuvo un profundo impacto y gran interés en el practicante, específicamente en el tema de simuladores para ITS. Actualmente, este interés se ha visto concretado en un trabajo de memoria a desarrollarse durante el presente semestre.
+
+Desafortunadamente, a pesar del trabajo realizado, la simulación no fue del todo fructuosa y hasta el día de hoy su desarrollo se encuentra congelado hasta nuevo aviso. El principal problema surge de que la teoría predictiva está basada en el estudio del comportamiento de los vehículos dada la existencia de otro vehículo en la pista, frente al primero, y la adaptación de este modelo a uno basado únicamente en los datos individuales de cada vehículo presentó problemas inesperados.
 
 \newpage
 \begin{thebibliography}{5}
@@ -627,6 +716,12 @@ Finalmente, el trabajo generó un interés profundo en el practicante, específi
   		\hbadness=1000 D. Jiang and L. Delgrossi.
   		\textit{IEEE 802.11p: Towards an International Standard for Wireless Access in Vehicular Environments}, Vehicular Technology Conference, 2008. VTC Spring 2008. IEEE, Singapore, 2008, pp. 2036-2040.
   		\\doi: 10.1109/VETECS.2008.458
+
+	\bibitem{v2vlte}
+		\hbadness=1000 S. Kato, M. Hiltunen, K. Joshi and R. Schlichting
+		\textit{Enabling vehicular safety applications over LTE networks},
+		2013 International Conference on Connected Vehicles and Expo (ICCVE), Las Vegas, NV, 2013, pp. 747-752.
+		\\doi: 10.1109/ICCVE.2013.6799889
 
     \bibitem{omnet}
   		\hbadness=1000 OMNeT++ Discrete Event Simulator.
